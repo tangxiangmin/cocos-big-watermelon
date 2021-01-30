@@ -1,10 +1,3 @@
-// Learn cc.Class:
-//  - https://docs.cocos.com/creator/manual/en/scripting/class.html
-// Learn Attribute:
-//  - https://docs.cocos.com/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
-
 const RandomInteger = function (e, t) {
     return Math.floor(Math.random() * (t - e) + e)
 }
@@ -35,9 +28,6 @@ cc.Class({
 
     // 合并时的动画效果
     showJuice(pos, width) {
-
-        console.log('showJuice')
-
         // 果粒
         for (let i = 0; i < 10; ++i) {
             const node = new cc.Node('Sprite');
@@ -96,12 +86,4 @@ cc.Class({
             node.active = false
         })))
     },
-
-
-    start() {
-
-    },
-
-
-    // update (dt) {},
 });

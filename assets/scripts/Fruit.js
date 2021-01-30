@@ -1,10 +1,3 @@
-// Learn cc.Class:
-//  - https://docs.cocos.com/creator/manual/en/scripting/class.html
-// Learn Attribute:
-//  - https://docs.cocos.com/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
-
 cc.Class({
     extends: cc.Component,
 
@@ -15,12 +8,14 @@ cc.Class({
         this.id = data.id
         const sp = this.node.getComponent(cc.Sprite)
         sp.spriteFrame = data.iconSF
+        // todo 控制一下每种水果的尺寸
+        this.node.setScale(0.7)
     },
     start() {
 
     },
     onBeginContact(contact, self, other) {
-        // todo 貌似检测比较消耗性能
+        // 貌似检测有点消耗性能
         if (self.node && other.node) {
             const s = self.node.getComponent('Fruit')
             const o = other.node.getComponent('Fruit')
