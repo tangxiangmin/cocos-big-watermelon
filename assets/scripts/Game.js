@@ -6,59 +6,47 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 
+const Fruit = cc.Class({
+    name: 'FruitItem',
+    properties: {
+        id: 0,
+        iconSF: cc.SpriteFrame
+    }
+});
+
+const JuiceItem = cc.Class({
+    name: 'JuiceItem',
+    properties: {
+        particle: cc.SpriteFrame,
+        circle: cc.SpriteFrame,
+        slash: cc.SpriteFrame,
+    }
+});
+
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        // todo 找到批量处理预置元素的方案
-        fruit: {
-            default: null,
-            type: Array
+        fruits: {
+            default: [],
+            type: Fruit
         },
+        juices: {
+            default: [],
+            type: JuiceItem
+        },
+
+        // 动态生成 找到批量处理预置元素的方案
         fruitPrefab: {
             default: null,
             type: cc.Prefab
         },
-        fruitPrefab2: {
+
+        juicePrefab: {
             default: null,
             type: cc.Prefab
         },
-        fruitPrefab3: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab4: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab5: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab6: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab7: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab8: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab9: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab10: {
-            default: null,
-            type: cc.Prefab
-        },
-        fruitPrefab11: {
-            default: null,
-            type: cc.Prefab
-        },
+
         juiceSprite1_1: {
             default: null,
             type: cc.SpriteFrame,
@@ -98,11 +86,25 @@ cc.Class({
         // 监听点击事件 todo 是否能够注册全局事件
         this.node.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this)
 
-        this.initFirst()
+        this.initOneFruit()
     },
 
     start() {
         console.log('start')
+    },
+
+    initFruits() {
+        for (let i = 0; i < this.items.length; ++i) {
+            let item = cc.instantiate(this.fruitPrefab);
+            let data = this.items[i];
+            this.node.addChild(item);
+            item.getComponent('ItemTemplate').init({
+                id: data.id,
+                itemName: data.itemName,
+                itemPrice: data.itemPrice,
+                iconSF: data.iconSF
+            });
+        }
     },
 
     initCollapse() {
@@ -144,55 +146,48 @@ cc.Class({
         joint.mouseRegion = this.node;
     },
 
-    initFirst() {
-        this.currentFruit = this.createFruit(0, 400)
+    initOneFruit(id = 1) {
+        this.currentFruit = this.createFruit(0, 400, id)
     },
 
     onTouchStart(e) {
         if (this.isCreating) return
         this.isCreating = true
 
-        const pos = e.getLocation()
-        let {x, y} = pos
-        x = x - 320
-        y = y - 480
-        const randomType = Math.floor(Math.random() * 5) + 1
+        const randomId = Math.floor(Math.random() * 5) + 1
 
         const fruit = this.currentFruit
 
-        const action = cc.sequence(cc.moveBy(0.3, cc.v2(x, 0)).easing(cc.easeCubicActionIn()), cc.callFunc(() => {
+        const pos = e.getLocation()
+        let {x, y} = pos
+        x = x - 320 + fruit.width / 2
+        y = y - 480
 
+        const action = cc.sequence(cc.moveBy(0.3, cc.v2(x, 0)).easing(cc.easeCubicActionIn()), cc.callFunc(() => {
             this.startFruitPhysics(fruit)
-            // 重新生成一个
+
+            // 1s后重新生成一个
             this.scheduleOnce(() => {
-                this.currentFruit = this.createFruit(0, 400, randomType)
+                this.initOneFruit(randomId)
                 this.isCreating = false
             }, 1)
         }))
 
         fruit.runAction(action)
     },
+    // 创建一个水果
     createOneFruit(num) {
-        const prefabMap = {
-            1: this.fruitPrefab,
-            2: this.fruitPrefab2,
-            3: this.fruitPrefab3,
-            4: this.fruitPrefab4,
-            5: this.fruitPrefab5,
-            6: this.fruitPrefab6,
-            7: this.fruitPrefab7,
-            8: this.fruitPrefab8,
-            9: this.fruitPrefab9,
-            10: this.fruitPrefab10,
-            11: this.fruitPrefab11,
-        }
+        let fruit = cc.instantiate(this.fruitPrefab);
+        const config = this.fruits[num - 1]
 
-        const fruit = cc.instantiate(prefabMap[num]);
-        // const sp = fruit.getComponent(cc.Sprite)
-        // sp.spriteFrame = 123
-        fruit.lv = num
+        fruit.getComponent('Fruit').init({
+            id: config.id,
+            iconSF: config.iconSF
+        });
 
+        // 有Fruit组件传入
         fruit.on('beginContact', ({self, other}) => {
+
             other.node.off('beginContact') // 两个node都会触发，todo 看看有没有其他方法只展示一次的
 
             self.node.removeFromParent(false)
@@ -206,7 +201,7 @@ cc.Class({
             newFruit.scale = 0
             newFruit.runAction(this.getScaleAction())
 
-            this.createFruitJuice(cc.v2({x, y}), other.node.width)
+            this.createFruitJuice(num, cc.v2({x, y}), other.node.width)
         })
 
         fruit.getComponent(cc.RigidBody).type = cc.RigidBodyType.Static
@@ -221,13 +216,11 @@ cc.Class({
         const physicsCircleCollider = fruit.getComponent(cc.PhysicsCircleCollider)
         physicsCircleCollider.radius = fruit.height / 2
         physicsCircleCollider.apply()
-
     },
 
+    // 在指定位置生成水果
     createFruit(x, y, type = 1) {
         const fruit = this.createOneFruit(type)
-
-
         fruit.setPosition(cc.v2(x, y));
         return fruit
     },
@@ -237,72 +230,20 @@ cc.Class({
     },
 
     // 合并时的动画效果
-    createFruitJuice(pos, n) {
+    createFruitJuice(id, pos, n) {
         // 播放合并的声音
         cc.audioEngine.play(this.boomAudio, false, 1);
         cc.audioEngine.play(this.waterAudio, false, 1);
 
-        const RandomInteger = function (e, t) {
-            return Math.floor(Math.random() * (t - e) + e)
-        }
+        // 展示动画
 
-        // 果粒
-        for (let i = 0; i < 10; ++i) {
-            const node = new cc.Node('Sprite');
-            const sp = node.addComponent(cc.Sprite);
+        let juice = cc.instantiate(this.juicePrefab);
+        this.node.addChild(juice);
 
-            sp.spriteFrame = this.juiceSprite1_1;
-            node.parent = this.node;
-
-            const a = 359 * Math.random(),
-                i = 30 * Math.random() + n / 2,
-                l = cc.v2(Math.sin(a * Math.PI / 180) * i, Math.cos(a * Math.PI / 180) * i);
-            node.scale = .5 * Math.random() + n / 100;
-            const p = .5 * Math.random();
-
-            node.position = pos;
-            node.runAction(
-                cc.sequence(cc.spawn(cc.moveBy(p, l),
-                    cc.scaleTo(p + .5, .3),
-                    cc.rotateBy(p + .5, RandomInteger(-360, 360))),
-                    cc.fadeOut(.1),
-                    cc.callFunc(function () {
-                        node.active = false
-                    }, this))
-            )
-        }
-
-        // 水珠
-        for (let f = 0; f < 20; f++) {
-            const node = new cc.Node('Sprite');
-            const sp = node.addComponent(cc.Sprite);
-
-            sp.spriteFrame = this.juiceSprite1_2;
-            node.parent = this.node;
-
-            let a = 359 * Math.random(), i = 30 * Math.random() + n / 2,
-                l = cc.v2(Math.sin(a * Math.PI / 180) * i, Math.cos(a * Math.PI / 180) * i);
-            node.scale = .5 * Math.random() + n / 100;
-            let p = .5 * Math.random();
-            node.position = pos
-            node.runAction(cc.sequence(cc.spawn(cc.moveBy(p, l), cc.scaleTo(p + .5, .3)), cc.fadeOut(.1), cc.callFunc(function () {
-                node.active = false
-            }, this)))
-        }
-
-        // 果汁
-        const node = new cc.Node('Sprite');
-        const sp = node.addComponent(cc.Sprite);
-
-        sp.spriteFrame = this.juiceSprite1_3;
-        node.parent = this.node;
-
-        node.position = pos
-        node.scale = 0
-        node.angle = RandomInteger(0, 360)
-        node.runAction(cc.sequence(cc.spawn(cc.scaleTo(.2, n / 150), cc.fadeOut(1)), cc.callFunc(function () {
-            node.active = false
-        })))
+        const config = this.juices[id - 1]
+        const instance = juice.getComponent('Juice')
+        instance.init(config)
+        instance.showJuice(pos, n)
     }
 
 
