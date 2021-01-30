@@ -47,18 +47,7 @@ cc.Class({
             type: cc.Prefab
         },
 
-        juiceSprite1_1: {
-            default: null,
-            type: cc.SpriteFrame,
-        },
-        juiceSprite1_2: {
-            default: null,
-            type: cc.SpriteFrame,
-        },
-        juiceSprite1_3: {
-            default: null,
-            type: cc.SpriteFrame,
-        },
+        // todo 可以实现一个audioManager
         boomAudio: {
             default: null,
             type: cc.AudioClip
@@ -73,44 +62,26 @@ cc.Class({
         }
     },
 
-    // LIFE-CYCLE CALLBACKS:
-
     onLoad() {
-        // 开启物理引擎
         this.initPhysics()
-
-        // 开启碰撞检测
         this.initCollapse()
 
         this.isCreating = false
+        this.fruitCount = 0
+
         // 监听点击事件 todo 是否能够注册全局事件
         this.node.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this)
 
         this.initOneFruit()
     },
 
-    start() {
-        console.log('start')
-    },
-
-    initFruits() {
-        for (let i = 0; i < this.items.length; ++i) {
-            let item = cc.instantiate(this.fruitPrefab);
-            let data = this.items[i];
-            this.node.addChild(item);
-            item.getComponent('ItemTemplate').init({
-                id: data.id,
-                itemName: data.itemName,
-                itemPrice: data.itemPrice,
-                iconSF: data.iconSF
-            });
-        }
-    },
-
+    // 开启碰撞
     initCollapse() {
         const manager = cc.director.getCollisionManager();
         manager.enabled = true
     },
+
+    // 开启物理引擎
     initPhysics() {
         const instance = cc.director.getPhysicsManager()
         instance.enabled = true
@@ -133,34 +104,31 @@ cc.Class({
             collider.size.height = height;
         }
 
-        _addBound(node, 0, -height / 2, width, 20);
-        _addBound(node, 0, height / 2, width, 20);
-        _addBound(node, -width / 2, 0, 20, height);
-        _addBound(node, width / 2, 0, 20, height);
+        // 设置四周的碰撞区域
+        _addBound(node, 0, -height / 2, width, 1);
+        _addBound(node, 0, height / 2, width, 1);
+        _addBound(node, -width / 2, 0, 1, height);
+        _addBound(node, width / 2, 0, 1, height);
 
         node.parent = this.node;
-
-
-        // add mouse joint
-        let joint = node.addComponent(cc.MouseJoint);
-        joint.mouseRegion = this.node;
     },
 
     initOneFruit(id = 1) {
+        this.currentFruit++
         this.currentFruit = this.createFruit(0, 400, id)
     },
 
+    // 监听屏幕点击
     onTouchStart(e) {
         if (this.isCreating) return
         this.isCreating = true
 
-        const randomId = Math.floor(Math.random() * 5) + 1
 
         const fruit = this.currentFruit
 
         const pos = e.getLocation()
         let {x, y} = pos
-        x = x - 320 + fruit.width / 2
+        x = x - 320
         y = y - 480
 
         const action = cc.sequence(cc.moveBy(0.3, cc.v2(x, 0)).easing(cc.easeCubicActionIn()), cc.callFunc(() => {
@@ -168,12 +136,23 @@ cc.Class({
 
             // 1s后重新生成一个
             this.scheduleOnce(() => {
-                this.initOneFruit(randomId)
+                const nextId = this.getNextFruitId()
+                this.initOneFruit(nextId)
                 this.isCreating = false
             }, 1)
         }))
 
         fruit.runAction(action)
+    },
+    getNextFruitId() {
+        if (this.fruitCount < 3) {
+            return 1
+        } else if (this.fruitCount === 3) {
+            return 2
+        } else {
+            // 随机返回前5个
+            return Math.floor(Math.random() * 5) + 1
+        }
     },
     // 创建一个水果
     createOneFruit(num) {
@@ -194,14 +173,25 @@ cc.Class({
             other.node.removeFromParent(false)
 
             const {x, y} = other.node
+
+            this.createFruitJuice(num, cc.v2({x, y}), other.node.width)
+
+
             const newFruit = this.createFruit(x, y, Math.min(num + 1, 11))
 
             this.startFruitPhysics(newFruit)
-            // 展示动画
-            newFruit.scale = 0
-            newFruit.runAction(this.getScaleAction())
 
-            this.createFruitJuice(num, cc.v2({x, y}), other.node.width)
+            // 展示动画 todo 动画效果需要调整
+            // newFruit.getComponent(cc.RigidBody).linearVelocity = cc.v2(0, -100)
+            newFruit.scale = 0
+            // const scaleAction = cc.scaleTo(0.2, 1).easing(cc.easeCubicActionIn())
+            // newFruit.runAction(scaleAction)
+            cc.tween(newFruit).to(.5, {
+                scale: 1
+            }, {
+                easing: "backOut"
+            }).start()
+
         })
 
         fruit.getComponent(cc.RigidBody).type = cc.RigidBodyType.Static
@@ -211,6 +201,7 @@ cc.Class({
 
         return fruit
     },
+
     startFruitPhysics(fruit) {
         fruit.getComponent(cc.RigidBody).type = cc.RigidBodyType.Dynamic
         const physicsCircleCollider = fruit.getComponent(cc.PhysicsCircleCollider)
@@ -225,10 +216,6 @@ cc.Class({
         return fruit
     },
 
-    getScaleAction(node) {
-        return cc.scaleTo(0.2, 1).easing(cc.easeCubicActionIn())
-    },
-
     // 合并时的动画效果
     createFruitJuice(id, pos, n) {
         // 播放合并的声音
@@ -236,7 +223,6 @@ cc.Class({
         cc.audioEngine.play(this.waterAudio, false, 1);
 
         // 展示动画
-
         let juice = cc.instantiate(this.juicePrefab);
         this.node.addChild(juice);
 
@@ -245,7 +231,4 @@ cc.Class({
         instance.init(config)
         instance.showJuice(pos, n)
     }
-
-
-    // update (dt) {},
 });
