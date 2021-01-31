@@ -21,9 +21,9 @@ cc.Class({
     properties: {
         fruits: {
             default: [],
-            type: Fruit
-        },
-        juices: {
+            type: Fruit   },
+
+      juices: {
             default: [],
             type: JuiceItem
         },
@@ -56,7 +56,6 @@ cc.Class({
 
     onLoad() {
         this.initPhysics()
-        this.initCollapse()
 
         this.isCreating = false
         this.fruitCount = 0
@@ -67,19 +66,19 @@ cc.Class({
         this.initOneFruit()
     },
 
-    // 开启碰撞
-    initCollapse() {
-        const manager = cc.director.getCollisionManager();
-        manager.enabled = true
-    },
-
-    // 开启物理引擎
+    // 开启物理引擎和碰撞检测
     initPhysics() {
+        // 物理引擎
         const instance = cc.director.getPhysicsManager()
         instance.enabled = true
         // instance.debugDrawFlags = 4
-
         instance.gravity = cc.v2(0, -960);
+
+        // 碰撞检测
+        const collisionManager = cc.director.getCollisionManager();
+        collisionManager.enabled = true
+
+        // 设置四周的碰撞区域
         let width = this.node.width;
         let height = this.node.height;
 
@@ -96,7 +95,6 @@ cc.Class({
             collider.size.height = height;
         }
 
-        // 设置四周的碰撞区域
         _addBound(node, 0, -height / 2, width, 1);
         _addBound(node, 0, height / 2, width, 1);
         _addBound(node, -width / 2, 0, 1, height);
@@ -163,38 +161,10 @@ cc.Class({
         fruit.getComponent(cc.PhysicsCircleCollider).radius = 0
 
         this.node.addChild(fruit);
+        fruit.scale = 0.6
 
         // 有Fruit组件传入
-        fruit.on('beginContact', ({self, other}) => {
-
-            other.node.off('beginContact') // 两个node都会触发，todo 看看有没有其他方法只展示一次的
-
-            // todo 可以使用对象池回收
-            self.node.removeFromParent(false)
-            other.node.removeFromParent(false)
-
-            const {x, y} = other.node
-
-            this.createFruitJuice(num, cc.v2({x, y}), other.node.width)
-
-            const id = num + 1
-            if (id <= 11) {
-                const newFruit = this.createFruitOnPos(x, y, id)
-
-                this.startFruitPhysics(newFruit)
-
-                // 展示动画 todo 动画效果需要调整
-                newFruit.scale = 0
-                cc.tween(newFruit).to(.5, {
-                    scale: 1
-                }, {
-                    easing: "backOut"
-                }).start()
-            } else {
-                // todo 合成两个西瓜
-                console.log(' todo 合成两个西瓜 还没有实现哦~ ')
-            }
-        })
+        fruit.on('sameContact', this.onSameFruitContact.bind(this))
 
         return fruit
     },
@@ -211,6 +181,37 @@ cc.Class({
         const fruit = this.createOneFruit(type)
         fruit.setPosition(cc.v2(x, y));
         return fruit
+    },
+    // 两个水果碰撞
+    onSameFruitContact({self, other}) {
+        other.node.off('sameContact') // 两个node都会触发，todo 看看有没有其他方法只展示一次的
+
+        const id = other.getComponent('Fruit').id
+        // todo 可以使用对象池回收
+        self.node.removeFromParent(false)
+        other.node.removeFromParent(false)
+
+        const {x, y} = other.node
+
+        this.createFruitJuice(id, cc.v2({x, y}), other.node.width)
+
+        const nextId = id + 1
+        if (nextId <= 11) {
+            const newFruit = this.createFruitOnPos(x, y, nextId)
+
+            this.startFruitPhysics(newFruit)
+
+            // 展示动画 todo 动画效果需要调整
+            newFruit.scale = 0
+            cc.tween(newFruit).to(.5, {
+                scale: 0.6
+            }, {
+                easing: "backOut"
+            }).start()
+        } else {
+            // todo 合成两个西瓜
+            console.log(' todo 合成两个西瓜 还没有实现哦~ ')
+        }
     },
 
     // 合并时的动画效果

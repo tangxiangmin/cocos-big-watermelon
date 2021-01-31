@@ -9,7 +9,6 @@ cc.Class({
         const sp = this.node.getComponent(cc.Sprite)
         sp.spriteFrame = data.iconSF
         // todo 控制一下每种水果的尺寸
-        this.node.setScale(0.7)
     },
     start() {
 
@@ -20,7 +19,7 @@ cc.Class({
             const s = self.node.getComponent('Fruit')
             const o = other.node.getComponent('Fruit')
             if (s && o && s.id === o.id) {
-                self.node.emit('beginContact', {self, other});
+                self.node.emit('sameContact', {self, other});
             }
         }
     },

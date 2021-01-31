@@ -174,7 +174,7 @@
       "array": [
         0,
         0,
-        407.0319397786862,
+        354.20439014783545,
         0,
         0,
         0,
@@ -452,15 +452,6 @@
     "juicePrefab": {
       "__uuid__": "e2555aa5-1e58-45fd-8b35-61de32438ca1"
     },
-    "juiceSprite1_1": {
-      "__uuid__": "a397e811-bb64-467a-b3d0-79d0dc77327a"
-    },
-    "juiceSprite1_2": {
-      "__uuid__": "5a2afc4d-71ed-4935-b47b-76d211c6ae5a"
-    },
-    "juiceSprite1_3": {
-      "__uuid__": "1307756f-8cbb-4d67-8b22-7178cecd2229"
-    },
     "boomAudio": {
       "__uuid__": "b9f7eec1-8fa9-4b8f-96f5-27ed8c354ce7"
     },
@@ -473,77 +464,77 @@
     "_id": "b8hqerX29LUYmoCpIVc5HE"
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 1,
     "iconSF": {
       "__uuid__": "f313815d-5b58-4e59-b742-6278fd43b5c2"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 2,
     "iconSF": {
       "__uuid__": "eeacba2f-49bc-490c-8d89-1c846dfc1852"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 3,
     "iconSF": {
       "__uuid__": "7dbe43d6-6155-48bb-a497-9f3c4bd3b15b"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 4,
     "iconSF": {
       "__uuid__": "1cb0287c-6756-4435-b60f-52d7a869215a"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 5,
     "iconSF": {
       "__uuid__": "fe82ec77-2719-479d-8092-d342b218ca33"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 6,
     "iconSF": {
       "__uuid__": "cd8be266-ac5b-494b-8cce-ec5af0038ea1"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 7,
     "iconSF": {
       "__uuid__": "8ad65544-bba2-442e-b04b-e564d8ad9e4f"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 8,
     "iconSF": {
       "__uuid__": "ee1e5032-d232-48fb-9b60-a4222ed102a6"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 9,
     "iconSF": {
       "__uuid__": "daa2c8c5-c020-4d4e-8607-741a482518ce"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 10,
     "iconSF": {
       "__uuid__": "caf03de2-d683-4cd2-89aa-e9b8efacbff5"
     }
   },
   {
-    "__type__": "Item",
+    "__type__": "FruitItem",
     "id": 11,
     "iconSF": {
       "__uuid__": "7b732bf8-8d5f-41ce-a716-7898db3bcb0b"
