@@ -140,7 +140,6 @@ cc.Class({
     },
     // 获取下一个水果的id
     getNextFruitId() {
-        return 5
         if (this.fruitCount < 3) {
             return 1
         } else if (this.fruitCount === 3) {
