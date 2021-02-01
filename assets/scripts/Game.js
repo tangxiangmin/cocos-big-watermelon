@@ -21,9 +21,10 @@ cc.Class({
     properties: {
         fruits: {
             default: [],
-            type: Fruit   },
+            type: Fruit
+        },
 
-      juices: {
+        juices: {
             default: [],
             type: JuiceItem
         },
@@ -51,6 +52,14 @@ cc.Class({
         waterAudio: {
             default: null,
             type: cc.AudioClip
+        },
+        scoreLabel: {
+            default: null,
+            type: cc.Label
+        },
+        fingerBtn: {
+            default: null,
+            type: cc.Button
         }
     },
 
@@ -59,11 +68,17 @@ cc.Class({
 
         this.isCreating = false
         this.fruitCount = 0
+        this.score = 0
+        this.useFinger = false
 
         // 监听点击事件 todo 是否能够注册全局事件
         this.node.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this)
 
         this.initOneFruit()
+
+    },
+    start() {
+        this.fingerBtn.node.on(cc.Node.EventType.TOUCH_START, this.onFingerTouch, this)
     },
 
     // 开启物理引擎和碰撞检测
@@ -136,6 +151,10 @@ cc.Class({
 
         fruit.runAction(action)
     },
+    onFingerTouch() {
+        console.log('onFingerTouch')
+        this.useFinger = true
+    },
     // 获取下一个水果的id
     getNextFruitId() {
         if (this.fruitCount < 3) {
@@ -165,6 +184,17 @@ cc.Class({
 
         // 有Fruit组件传入
         fruit.on('sameContact', this.onSameFruitContact.bind(this))
+        fruit.on(cc.Node.EventType.TOUCH_START, (e) => {
+            // 选择道具时直接消除对应水果
+            if (this.useFinger && fruit !== this.currentFruit) {
+                const {x, y, width} = fruit
+                this.createFruitJuice(config.id, cc.v2({x, y}), width)
+                e.stopPropagation()
+                this.useFinger = false
+                fruit.removeFromParent(true)
+
+            }
+        })
 
         return fruit
     },
@@ -188,12 +218,14 @@ cc.Class({
 
         const id = other.getComponent('Fruit').id
         // todo 可以使用对象池回收
-        self.node.removeFromParent(false)
-        other.node.removeFromParent(false)
+        self.node.removeFromParent(true)
+        other.node.removeFromParent(true)
 
         const {x, y} = other.node
 
         this.createFruitJuice(id, cc.v2({x, y}), other.node.width)
+
+        this.addScore(id)
 
         const nextId = id + 1
         if (nextId <= 11) {
@@ -228,5 +260,11 @@ cc.Class({
         const instance = juice.getComponent('Juice')
         instance.init(config)
         instance.showJuice(pos, n)
+    },
+    // 添加得分分数
+    addScore(fruitId) {
+        this.score += fruitId * 2
+        // todo 处理分数tween动画
+        this.scoreLabel.string = this.score
     }
 });
